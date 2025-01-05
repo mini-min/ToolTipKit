@@ -57,3 +57,9 @@ tooltip.baseForegroundColor = .yellow
 1. In Xcode, go to File > Add Packages.
 2. Enter the repository URL: https://github.com/your-repo/ToolTipKit.git.
 3. Choose the version or branch you want to integrate.
+
+<br>
+
+## License
+ToolTipKit is released under the MIT License. Feel free to use it in your projects!  
+See the [LICENSE file](https://github.com/mini-min/ToolTipKit?tab=MIT-1-ov-file) for more info
