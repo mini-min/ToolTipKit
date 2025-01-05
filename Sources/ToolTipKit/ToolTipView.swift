@@ -80,39 +80,14 @@ final public class ToolTipView: UIView, BaseToolTipView {
     
     public func show() {
         guard !isShow, let sourceView else { return }
+        guard let superview = sourceView.superview else { return }
         isShow = true
         
+        superview.addSubview(self)
         setupTooltipLayoutBySourceView()
         self.alpha = 0
         self.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
         
-        let finalPosition: CGPoint
-        switch tipType {
-        case .top:
-            finalPosition = CGPoint(
-                x: sourceView.center.x,
-                y: sourceView.frame.minY
-            )
-        case .bottom:
-            finalPosition = CGPoint(
-                x: sourceView.center.x,
-                y: sourceView.frame.maxY
-            )
-        case .left:
-            finalPosition = CGPoint(
-                x: sourceView.frame.minX - self.frame.width / 2,
-                y: sourceView.center.y
-            )
-        case .right:
-            finalPosition = CGPoint(
-                x: sourceView.frame.maxX + self.frame.width / 2,
-                y: sourceView.center.y
-            )
-        }
-        self.center = CGPoint(
-            x: sourceView.center.x,
-            y: sourceView.center.y
-        )
         UIView.animate(
             withDuration: 0.3,
             delay: 0,
@@ -121,7 +96,6 @@ final public class ToolTipView: UIView, BaseToolTipView {
                 guard let self else { return }
                 self.alpha = 1
                 self.transform = CGAffineTransform.identity
-                self.center = finalPosition
             })
     }
     
