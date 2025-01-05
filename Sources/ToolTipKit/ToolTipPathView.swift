@@ -5,19 +5,15 @@
 //  Created by 민 on 1/4/25.
 //
 
-import Foundation
-
 import SnapKit
-
-enum TipType {
-    case top, bottom, left, right
-}
+import UIKit
 
 final class ToolTipPathView: UIView {
     
     // MARK: - Properties
     
-    private var tipType: TipType
+    private var tipType: ToolTipView.TipType
+    private var baseColor: UIColor
     
     private let arrowWidth: CGFloat = 10.0
     private let arrowHeight: CGFloat = 9.0
@@ -28,8 +24,12 @@ final class ToolTipPathView: UIView {
     
     // MARK: - Life Cycles
     
-    init(tipType: TipType) {
+    init(
+        tipType: ToolTipView.TipType,
+        color: UIColor
+    ) {
         self.tipType = tipType
+        self.baseColor = color
         super.init(frame: .zero)
     }
     
@@ -53,39 +53,37 @@ final class ToolTipPathView: UIView {
 
 private extension ToolTipPathView {
     func setupTip() {
-        tipPath.do {
-            $0.lineJoinStyle = .round
-            $0.lineWidth = 2
-            tipPath.close()
-            UIColor.black900.setStroke()
-            tipPath.stroke()
-            UIColor.black900.setFill()
-            tipPath.fill()
-        }
+        tipPath.lineJoinStyle = .round
+        tipPath.lineWidth = 2
+        tipPath.close()
+        baseColor.setStroke()
+        tipPath.stroke()
+        baseColor.setFill()
+        tipPath.fill()
     }
     
-    /// 팁이 상단에 위치했을 때 - 아래를 가리키는 방향
+    /// When the tip is positioned at the top - pointing downward
     func drawTopTip(_ rect: CGRect) {
         tipPath.move(to: CGPoint(x: rect.midX - arrowWidth/2, y: rect.maxY - arrowHeight))
         tipPath.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
         tipPath.addLine(to: CGPoint(x: rect.midX + arrowWidth/2, y: rect.maxY - arrowHeight))
     }
     
-    /// 팁이 하단에 위치했을 때 - 위를 가리키는 방향
+    /// When the tip is positioned at the bottom - pointing upward
     func drawBottomTip(_ rect: CGRect) {
         tipPath.move(to: CGPoint(x: rect.midX - arrowWidth/2, y: rect.minY + arrowHeight))
         tipPath.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
         tipPath.addLine(to: CGPoint(x: rect.midX + arrowWidth/2, y: rect.minY + arrowHeight))
     }
     
-    /// 팁이 좌측에 위치했을 때 - 오른쪽을 가리키는 방향
+    /// When the tip is positioned at the left - pointing right
     func drawLeftTip(_ rect: CGRect) {
         tipPath.move(to: CGPoint(x: rect.maxX - arrowHeight, y: rect.midY - arrowWidth/2))
         tipPath.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
         tipPath.addLine(to: CGPoint(x: rect.maxX - arrowHeight, y: rect.midY + arrowWidth/2))
     }
     
-    /// 팁이 우측에 위치했을 때 - 왼쪽을 가리키는 방향
+    /// When the tip is positioned at the right - pointing left
     func drawRightTip(_ rect: CGRect) {
         tipPath.move(to: CGPoint(x: rect.minX + arrowHeight, y: rect.midY - arrowWidth/2))
         tipPath.addLine(to: CGPoint(x: rect.minX, y: rect.midY))

@@ -2,16 +2,39 @@
 // https://docs.swift.org/swift-book
 
 import UIKit
-
 import SnapKit
 
-final public class ToolTipKit: UIView {
+final public class ToolTipView: UIView, BaseToolTipView {
+    
+    public enum TipType {
+        case top, bottom, left, right
+    }
+    
+    /**
+     Default Settings of the ToolTip.
+     */
+    public static var DEFAULT_BACKGROUND_COLOR: UIColor = .black
+    public static var DEFAULT_FOREGROUND_COLOR: UIColor = .white
     
     // MARK: - Properties
     
-    /// 현재 툴팁이 보여지고 있는지 여부를 Bool 값으로 반환
-    private(set) var isShow: Bool = false
+    @IBInspectable public var baseBackgroundColor: UIColor! {
+        didSet {
+            self.tipPathView = ToolTipPathViewFactory.makeToolTipPathView(tipType: tipType, color: baseBackgroundColor)
+            setupStyle()
+            setupHierarchy()
+            setupLayout()
+        }
+    }
     
+    @IBInspectable public var baseForegroundColor: UIColor! {
+        didSet {
+            setupStyle()
+        }
+    }
+        
+    public private(set) var isShow: Bool = false
+        
     private let title: String
     private let tipType: TipType
     
@@ -21,15 +44,30 @@ final public class ToolTipKit: UIView {
     
     private let containerView = UIView()
     private let tipLabel = UILabel()
-    private lazy var tipPathView = TipPathView(tipType: tipType)
+    private var tipPathView: ToolTipPathView
     
     // MARK: - Life Cycles
     
-    public init(title: String, type: TipType, sourceItem: AnyObject) {
+    public init(
+        title: String,
+        type: TipType,
+        sourceItem: AnyObject,
+        baseBackgroundColor: UIColor = ToolTipView.DEFAULT_BACKGROUND_COLOR,
+        baseForegroundColor: UIColor = ToolTipView.DEFAULT_FOREGROUND_COLOR
+    ) {
         self.title = title
         self.tipType = type
         self.sourceView = (sourceItem as? UIView) ?? sourceItem.view
+        
+        self.tipPathView = ToolTipPathViewFactory.makeToolTipPathView(
+            tipType: tipType,
+            color: baseBackgroundColor
+        )
         super.init(frame: .zero)
+        
+        self.baseBackgroundColor = baseBackgroundColor
+        self.baseForegroundColor = baseForegroundColor
+        
         setupStyle()
         setupHierarchy()
         setupLayout()
@@ -39,15 +77,9 @@ final public class ToolTipKit: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-}
-
-// MARK: - Methods
-
-extension ToasterTipView {
-    /// 툴팁을 보여줄 때 호출하는 함수 (with 애니메이션)
-    func showToolTip() {
-        guard !isShow else { return }
-        guard let sourceView else { return }
+    
+    public func show() {
+        guard !isShow, let sourceView else { return }
         isShow = true
         
         setupTooltipLayoutBySourceView()
@@ -93,8 +125,7 @@ extension ToasterTipView {
             })
     }
     
-    /// 툴팁을 사라지게 할 때 호출하는 함수 (with 애니메이션)
-    func dismissToolTip(completion: (() -> Void)? = nil) {
+    public func hide() {
         UIView.animate(
             withDuration: 0.3,
             delay: 0,
@@ -104,53 +135,41 @@ extension ToasterTipView {
                 guard self.isShow else { return }
                 self.isShow = false
                 self.alpha = 0
-            }, completion: { _ in
-                self.removeFromSuperview()
-                completion?()
-            })
+            }
+        )
     }
     
-    /// 툴팁을 보여주고, 특정 시간 이후에 자동으로 닫히도록 하는 함수 (with 애니메이션)
-    func showToolTipAndDismissAfterDelay(
-        duration: Int,
-        completion: (() -> Void)? = nil
-    ) {
-        showToolTip()
+    public func showWithTimeout(duration: Int) {
+        show()
         DispatchQueue.main.asyncAfter(
             deadline: .now() + .seconds(duration)
         ) { [weak self] in
-            self?.dismissToolTip(completion: completion)
+            self?.hide()
         }
     }
 }
 
 // MARK: - Private Extensions
 
-private extension ToasterTipView {
+private extension ToolTipView {
     func setupStyle() {
         backgroundColor = .clear
         
-        tipPathView.do {
-            $0.backgroundColor = .clear
-        }
+        tipPathView.backgroundColor = .clear
         
-        containerView.do {
-            $0.backgroundColor = .black900
-            $0.makeRounded(radius: 8)
-        }
+        containerView.backgroundColor = baseBackgroundColor
+        containerView.layer.cornerRadius = 8
         
-        tipLabel.do {
-            $0.text = title
-            $0.numberOfLines = 2
-            $0.font = .suitMedium(size: 12)
-            $0.textColor = .toasterWhite
-            $0.textAlignment = .center
-        }
+        tipLabel.text = title
+        tipLabel.numberOfLines = 2
+        tipLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        tipLabel.textColor = baseForegroundColor
+        tipLabel.textAlignment = .center
     }
     
     func setupHierarchy() {
-        addSubviews(tipPathView, containerView)
-        containerView.addSubviews(tipLabel)
+        [tipPathView, containerView].forEach { addSubview($0) }
+        containerView.addSubview(tipLabel)
     }
     
     func setupLayout() {
